@@ -25,8 +25,9 @@ exports.handler = async (event) => {
 
     let text = '';
     if (isPdf) {
-      // Try text extraction first
-      const pdfParse = require('pdf-parse');
+      // Import the internal lib directly: the package's index.js runs debug code
+      // that reads a local test PDF, which crashes in serverless environments.
+      const pdfParse = require('pdf-parse/lib/pdf-parse.js');
       const data = await pdfParse(buffer);
       text = (data.text || '').trim();
       // If PDF has almost no text, it's likely a scanned image PDF -> OCR fallback
