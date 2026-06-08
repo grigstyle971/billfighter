@@ -1,0 +1,8 @@
+{
+  "name": "billfighter",
+  "version": "1.0.0",
+  "description": "AI medical bill analysis and dispute letters",
+  "dependencies": {
+    "pdf-parse": "^1.1.1"
+  }
+}
