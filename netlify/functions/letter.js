@@ -30,12 +30,15 @@ exports.handler = async (event) => {
 RULES:
 - Reference ONLY the specific issues provided below. Do not invent new ones.
 - Use a confident, professional tone that signals the patient knows their rights.
-- Request an itemized review and correction of each issue.
-- Mention the patient's right to request an itemized bill and to dispute charges.
-- Include placeholders in [BRACKETS] for: patient name, address, account number, date — so the user can fill them in.
+- EXTRACT from the bill text: patient name, account number, hospital name, date of service. Use these real values directly.
+- Do NOT include ANY bracket placeholders like [Patient Name], [Date], [Your Mailing Address], [Hospital Address] etc. If a piece of data is not in the bill — simply omit that line entirely. No placeholders whatsoever.
+- Start the letter directly with the patient's name (extracted from bill), then skip straight to the salutation.
 - Cite the specific line items and dollar amounts from the issues.
-- End with a clear request and a reasonable deadline (30 days).
+- End with a clear request and a 30-day deadline.
 - Keep it to one page. Output PLAIN TEXT only (no markdown, no JSON).
+
+BILL TEXT (extract patient name, hospital name, account number, date from here):
+${billText ? billText.slice(0, 2000) : 'Not provided'}
 
 BILL SUMMARY:
 - Total billed: ${analysis.total_billed || 'see bill'}
@@ -50,9 +53,9 @@ Write the complete letter now:`;
   const reqBody = JSON.stringify({
     model: 'llama-3.3-70b-versatile',
     max_tokens: 2000,
-    temperature: 0.4,
+    temperature: 0.1,
     messages: [
-      { role: 'system', content: 'You write professional medical billing dispute letters for US patients. Plain text only. Firm, polite, specific. Never fabricate facts beyond the provided issues.' },
+      { role: 'system', content: 'You write professional medical billing dispute letters for US patients. Plain text only. Firm, polite, specific. Extract all data (name, account, hospital, date) from the bill text provided. NEVER write any bracket placeholder like [Patient Name], [Date], [Address] or similar — if data is missing, skip that line completely. Zero placeholders.' },
       { role: 'user', content: prompt },
     ],
   });
