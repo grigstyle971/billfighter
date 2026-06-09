@@ -6,6 +6,28 @@
   node_bundler = "esbuild"
   external_node_modules = ["pdf-parse"]
 
+# Serve static files directly (before the SPA catch-all)
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/sitemap.xml"
+  status = 200
+
+[[redirects]]
+  from = "/google*.html"
+  to = "/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/privacy.html"
+  to = "/privacy.html"
+  status = 200
+
+[[redirects]]
+  from = "/terms.html"
+  to = "/terms.html"
+  status = 200
+
+# SPA catch-all — must be last
 [[redirects]]
   from = "/*"
   to = "/index.html"
