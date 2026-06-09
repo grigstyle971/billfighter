@@ -126,6 +126,12 @@
   .dropzone .dz-t{font-family:'Fraunces',serif;font-size:19px;font-weight:600;margin-bottom:6px}
   .dropzone .dz-s{font-size:14px;color:var(--muted)}
   .dropzone input{display:none}
+  .mode-tabs{display:flex;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:5px;margin-bottom:18px}
+  .mode-tab{flex:1;padding:11px;border:none;background:transparent;color:var(--muted);font-family:inherit;font-weight:600;font-size:14px;border-radius:8px;cursor:pointer;transition:background .2s,color .2s}
+  .mode-tab.active{background:var(--paper2);color:var(--ink);box-shadow:var(--shadow)}
+  .bill-textarea{width:100%;min-height:240px;border:2px dashed var(--line);border-radius:14px;padding:18px;font-family:'Spline Sans',monospace;font-size:14px;line-height:1.6;color:var(--ink);background:var(--paper);resize:vertical;outline:none;transition:border-color .2s}
+  .bill-textarea:focus{border-color:var(--blue);background:#f0f4ff}
+  .bill-textarea::placeholder{color:var(--muted);font-family:'Spline Sans',sans-serif}
   .file-chip{display:none;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin-top:0}
   .file-chip.show{display:flex}
   .file-chip .fc-ic{width:38px;height:38px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;flex-shrink:0}
@@ -340,17 +346,38 @@
 
         <!-- UPLOAD STATE -->
         <div id="state-upload">
-          <label class="dropzone" id="dropzone">
-            <div class="dz-ic">📄</div>
-            <div class="dz-t">Drop your bill here, or tap to browse</div>
-            <div class="dz-s">PDF, JPG or PNG · up to 10MB · your file is never stored</div>
-            <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,image/*,application/pdf" />
-          </label>
-          <div class="file-chip" id="fileChip">
-            <div class="fc-ic">✓</div>
-            <div class="fc-name" id="fileName">bill.pdf</div>
-            <div class="fc-x" id="fileRemove">×</div>
+          <div class="mode-tabs">
+            <button class="mode-tab active" id="tabFile" type="button">📄 Upload file</button>
+            <button class="mode-tab" id="tabText" type="button">📝 Paste text</button>
           </div>
+
+          <!-- file mode -->
+          <div id="modeFile">
+            <div class="dropzone" id="dropzone">
+              <div class="dz-ic">📄</div>
+              <div class="dz-t">Drop your bill here, or click to browse</div>
+              <div class="dz-s">PDF, JPG or PNG · up to 10MB · your file is never stored</div>
+            </div>
+            <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,image/*,application/pdf" hidden />
+            <div class="file-chip" id="fileChip">
+              <div class="fc-ic">✓</div>
+              <div class="fc-name" id="fileName">bill.pdf</div>
+              <div class="fc-x" id="fileRemove">×</div>
+            </div>
+          </div>
+
+          <!-- text mode -->
+          <div id="modeText" style="display:none">
+            <textarea id="textInput" class="bill-textarea" placeholder="Paste your itemized medical bill here — include each line item, code, and amount.
+
+Example:
+ER Visit Level 5 (99285)  $2,450.00
+Metabolic Panel (80053)   $385.00
+Ibuprofen 200mg tablet    $30.00
+Facility Fee              $1,800.00
+Total: $9,153.00"></textarea>
+          </div>
+
           <button class="analyze-btn" id="analyzeBtn" disabled>Analyze my bill — free →</button>
           <div class="privacy-row">🔒 Processed securely · not stored · not shared</div>
         </div>
@@ -422,19 +449,46 @@
   function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3200)}
 
   // ---- state ----
-  let selectedFile=null, billText='', analysisResult=null;
+  let selectedFile=null, billText='', analysisResult=null, mode='file';
 
   const fileInput=document.getElementById('fileInput');
   const dropzone=document.getElementById('dropzone');
   const fileChip=document.getElementById('fileChip');
   const fileNameEl=document.getElementById('fileName');
   const analyzeBtn=document.getElementById('analyzeBtn');
+  const textInput=document.getElementById('textInput');
+  const tabFile=document.getElementById('tabFile');
+  const tabText=document.getElementById('tabText');
+  const modeFile=document.getElementById('modeFile');
+  const modeText=document.getElementById('modeText');
 
+  // ---- mode tabs ----
+  tabFile.addEventListener('click',()=>{
+    mode='file';
+    tabFile.classList.add('active');tabText.classList.remove('active');
+    modeFile.style.display='';modeText.style.display='none';
+    refreshBtn();
+  });
+  tabText.addEventListener('click',()=>{
+    mode='text';
+    tabText.classList.add('active');tabFile.classList.remove('active');
+    modeText.style.display='';modeFile.style.display='none';
+    refreshBtn();
+  });
+
+  function refreshBtn(){
+    if(mode==='file') analyzeBtn.disabled=!selectedFile;
+    else analyzeBtn.disabled=textInput.value.trim().length<20;
+  }
+
+  // dropzone click opens file picker
+  dropzone.addEventListener('click',()=>fileInput.click());
   dropzone.addEventListener('dragover',e=>{e.preventDefault();dropzone.classList.add('drag')});
   dropzone.addEventListener('dragleave',()=>dropzone.classList.remove('drag'));
   dropzone.addEventListener('drop',e=>{e.preventDefault();dropzone.classList.remove('drag');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
   fileInput.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0])});
   document.getElementById('fileRemove').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();clearFile()});
+  textInput.addEventListener('input',refreshBtn);
 
   function handleFile(f){
     if(f.size>10*1024*1024){toast('File too large — max 10MB');return}
@@ -442,13 +496,13 @@
     fileNameEl.textContent=f.name;
     fileChip.classList.add('show');
     dropzone.style.display='none';
-    analyzeBtn.disabled=false;
+    refreshBtn();
   }
   function clearFile(){
     selectedFile=null;fileInput.value='';
     fileChip.classList.remove('show');
     dropzone.style.display='';
-    analyzeBtn.disabled=true;
+    refreshBtn();
   }
 
   // ---- loading steps animation ----
@@ -469,7 +523,8 @@
 
   // ---- analyze flow ----
   analyzeBtn.addEventListener('click',async()=>{
-    if(!selectedFile)return;
+    if(mode==='file' && !selectedFile)return;
+    if(mode==='text' && textInput.value.trim().length<20)return;
     document.getElementById('state-upload').style.display='none';
     document.getElementById('loading').classList.add('show');
     document.getElementById('card-title').textContent='Analyzing your bill';
@@ -477,13 +532,16 @@
     runLoadingSteps();
 
     try{
-      const b64=await fileToBase64(selectedFile);
-      // 1) extract text
-      const exRes=await fetch('/.netlify/functions/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:b64,fileType:selectedFile.type,fileName:selectedFile.name})});
-      const exData=await exRes.json();
-      if(!exRes.ok)throw new Error(exData.error||'Could not read file');
-      billText=exData.text;
-      // 2) analyze
+      if(mode==='file'){
+        const b64=await fileToBase64(selectedFile);
+        const exRes=await fetch('/.netlify/functions/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:b64,fileType:selectedFile.type,fileName:selectedFile.name})});
+        const exData=await exRes.json();
+        if(!exRes.ok)throw new Error(exData.error||'Could not read file');
+        billText=exData.text;
+      } else {
+        billText=textInput.value.trim();
+      }
+      // analyze
       const anRes=await fetch('/.netlify/functions/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({billText})});
       const anData=await anRes.json();
       if(!anRes.ok)throw new Error(anData.error||'Analysis failed');
