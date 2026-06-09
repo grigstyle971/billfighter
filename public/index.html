@@ -629,8 +629,8 @@ Total: $9,153.00"></textarea>
   function startPayment(){
     // stash analysis + bill text so we can generate the letter after payment
     try{
-      sessionStorage.setItem('bf_analysis',JSON.stringify(analysisResult));
-      sessionStorage.setItem('bf_billText',billText);
+      localStorage.setItem('bf_analysis',JSON.stringify(analysisResult));
+      localStorage.setItem('bf_billText',billText);
     }catch(e){}
     const successUrl=window.location.origin+window.location.pathname+'?paid=1';
     const checkout='https://billfighter.lemonsqueezy.com/checkout/buy/6e053ea6-ddd4-4e05-bf6d-1fb01bd67b8b?checkout[success_url]='+encodeURIComponent(successUrl);
@@ -641,8 +641,8 @@ Total: $9,153.00"></textarea>
   async function checkPaid(){
     const params=new URLSearchParams(window.location.search);
     if(!params.get('paid'))return;
-    const aRaw=sessionStorage.getItem('bf_analysis');
-    const bText=sessionStorage.getItem('bf_billText');
+    const aRaw=localStorage.getItem('bf_analysis');
+    const bText=localStorage.getItem('bf_billText');
     if(!aRaw){toast('Please upload your bill again to generate the letter.');return}
     analysisResult=JSON.parse(aRaw);
     billText=bText||'';
@@ -662,8 +662,8 @@ Total: $9,153.00"></textarea>
       const data=await res.json();
       if(!res.ok)throw new Error(data.error||'Could not generate letter');
       renderLetter(data.letter);
-      sessionStorage.removeItem('bf_analysis');
-      sessionStorage.removeItem('bf_billText');
+      localStorage.removeItem('bf_analysis');
+      localStorage.removeItem('bf_billText');
       window.history.replaceState({},'',window.location.pathname);
     }catch(err){
       document.getElementById('loading').classList.remove('show');
@@ -690,7 +690,7 @@ Total: $9,153.00"></textarea>
         <button class="la-btn ghost" id="cpTxt">📋 Copy text</button>
       </div>`;
     lv.classList.add('show');
-    lv.scrollIntoView({behavior:'smooth'});
+    setTimeout(()=>lv.scrollIntoView({behavior:'smooth',block:'start'}),200);
     document.getElementById('dlPdf').addEventListener('click',downloadLetterPDF);
     document.getElementById('cpTxt').addEventListener('click',()=>{navigator.clipboard.writeText(window.__letterText);toast('Letter copied to clipboard')});
   }
