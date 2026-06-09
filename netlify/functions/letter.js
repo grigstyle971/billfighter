@@ -34,7 +34,10 @@ RULES:
 - Do NOT include ANY bracket placeholders like [Patient Name], [Date], [Your Mailing Address], [Hospital Address] etc. If a piece of data is not in the bill — simply omit that line entirely. No placeholders whatsoever.
 - Start the letter directly with the patient's name (extracted from bill), then skip straight to the salutation.
 - Cite the specific line items and dollar amounts from the issues.
-- End with a clear request and a 30-day deadline.
+- Include a clear "Re:" line with the account number.
+- After explaining the issues, include a numbered "REQUESTED ACTIONS:" section listing exactly what the hospital must do for each issue.
+- State the total estimated disputed amount clearly.
+- End with a 30-day deadline and "Sincerely," followed by the patient's name.
 - Keep it to one page. Output PLAIN TEXT only (no markdown, no JSON).
 
 BILL TEXT (extract patient name, hospital name, account number, date from here):
@@ -55,7 +58,7 @@ Write the complete letter now:`;
     max_tokens: 2000,
     temperature: 0.1,
     messages: [
-      { role: 'system', content: 'You write professional medical billing dispute letters for US patients. Plain text only. Firm, polite, specific. Extract all data (name, account, hospital, date) from the bill text provided. NEVER write any bracket placeholder like [Patient Name], [Date], [Address] or similar — if data is missing, skip that line completely. Zero placeholders.' },
+      { role: 'system', content: 'You write professional medical billing dispute letters for US patients. Plain text only. Firm, polite, specific. Extract all data (name, account, hospital, date) from the bill text provided. NEVER write any bracket placeholder like [Patient Name], [Date], [Address] or similar — if data is missing, skip that line completely. Zero placeholders. Always include a numbered REQUESTED ACTIONS section and state the total disputed amount.' },
       { role: 'user', content: prompt },
     ],
   });
